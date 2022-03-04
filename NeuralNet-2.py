@@ -9,9 +9,14 @@
 #####################################################################################################################
 
 
+from cv2 import mean
 import numpy as np
+import matplotlib.pyplot as plt
 import pandas as pd
 from sklearn.model_selection import train_test_split
+from sklearn.neural_network import MLPRegressor
+from sklearn.metrics import accuracy_score, mean_squared_error
+
 
 
 class NeuralNet:
@@ -25,6 +30,11 @@ class NeuralNet:
     # standardization, normalization,
     #   categorical to numerical, etc
     def preprocess(self):
+        # No categories and mainly interested in dropping null values and removing duplicate entries
+        # to clean the data
+        self.raw_input.dropna(inplace=True)
+        self.raw_input.drop_duplicates(inplace=True)
+        self.raw_input['Class'] = pd.factorize( self.raw_input['Class'])[0] + 1
         self.processed_data = self.raw_input
 
         return 0
@@ -54,6 +64,22 @@ class NeuralNet:
 
         # Create the neural network and be sure to keep track of the performance
         #   metrics
+        for activation in activations:
+            for learn in learning_rate:
+                for iteration in max_iterations:
+                    for hidden_layer in num_hidden_layers:
+                        regression = MLPRegressor(hidden_layer_sizes=tuple([100]* hidden_layer), activation=activation,learning_rate_init=learn,max_iter=iteration).fit(X_train,y_train)
+                        train_accuracy = accuracy_score(y_train, regression.predict(X_train))
+                        test_accuracy = accuracy_score(y_test, regression.predict(X_test))
+                        train_error = mean_squared_error(y_train, regression.predict(X_train))
+                        test_error = mean_squared_error(y_test, regression.predict(X_test))
+                        print(f'Activation_Function = {activation}, Learning_Rate = {learn}, Iterations = {iteration}, Num_hidden_layers = {hidden_layer}')
+                        print(f'Train_Accuracy = {train_accuracy}, Train_Error = {train_error}')
+                        print(f'Test_Accuracy = {test_accuracy}, Test_Error = {test_error}')
+
+        exit()
+
+
 
         # Plot the model history for each model in a single plot
         # model history is a plot of accuracy vs number of epochs
@@ -66,6 +92,6 @@ class NeuralNet:
 
 
 if __name__ == "__main__":
-    neural_network = NeuralNet("train.csv") # put in path to your file
+    neural_network = NeuralNet("https://raw.githubusercontent.com/alexarmstrongutd/ML-HW-2/master/Concrete_Data.csv") # put in path to your file
     neural_network.preprocess()
     neural_network.train_evaluate()
